@@ -1,18 +1,19 @@
 mod days;
+mod utils;
 
 enum Day {
     All,
-    Specific(i32),
+    Specific(days::Day),
 }
 
 impl<T: AsRef<str>> TryFrom<Option<T>> for Day {
     type Error = String;
 
     fn try_from(s: Option<T>) -> Result<Self, Self::Error> {
-        match s.map(|s| s.as_ref().parse::<i32>()) {
+        match s.map(|s| s.as_ref().parse::<i32>().map(days::Day::new)) {
             None => Ok(Day::All),
-            Some(Ok(n)) if (1..=25).contains(&n) => Ok(Day::Specific(n)),
-            Some(Ok(_)) => Err(String::from("Day must be between 1 and 25")),
+            Some(Ok(Some(n))) => Ok(Day::Specific(n)),
+            Some(Ok(None)) => Err(String::from("Day must be between 1 and 25")),
             _ => Err(String::from("Invalid day")),
         }
     }
