@@ -4,7 +4,7 @@ pub fn lines<T: FromStr>(reader: impl BufRead) -> impl Iterator<Item = T> {
     reader
         .lines()
         .flat_map(|s| s.into_iter())
-        .flat_map(|s| s.parse::<T>().into_iter())
+        .flat_map(|s| s.trim().parse::<T>().into_iter())
 }
 
 #[cfg(test)]
@@ -34,6 +34,27 @@ mod tests {
                 lines(Cursor::new("123\nbbb\n")).collect::<Vec<i32>>(),
                 vec![123]
             );
+        }
+
+        #[test]
+        fn test_example() {
+            assert_eq!(
+                lines(Cursor::new(
+                    "199
+            200
+            208
+            210
+            200
+            207
+            240
+            269
+            260
+            263
+      "
+                ))
+                .collect::<Vec<i32>>(),
+                vec![199, 200, 208, 210, 200, 207, 240, 269, 260, 263]
+            )
         }
     }
 }
