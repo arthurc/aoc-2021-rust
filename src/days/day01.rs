@@ -5,7 +5,7 @@ pub fn run(read: impl BufRead) -> String {
     format!(
         "{}",
         utils::lines(read)
-            .directions()
+            .directions::<1>()
             .filter(Direction::increased)
             .count()
     )
@@ -26,11 +26,21 @@ impl Direction {
     }
 }
 
-struct Directions<I> {
+struct Directions<I, const W: usize> {
     iter: I,
     from: Option<i32>,
+    window: [i32; W],
 }
-impl<I> Iterator for Directions<I>
+impl<I: Iterator<Item = i32>, const W: usize> Directions<I, W> {
+    fn new(iter: I) -> Self {
+        Self {
+            iter,
+            from: None,
+            window: [0; W],
+        }
+    }
+}
+impl<I, const W: usize> Iterator for Directions<I, W>
 where
     I: Iterator<Item = i32>,
 {
@@ -45,14 +55,11 @@ where
 }
 
 trait IteratorExt {
-    fn directions(self) -> Directions<Self>
+    fn directions<const W: usize>(self) -> Directions<Self, W>
     where
         Self: Sized + Iterator<Item = i32>,
     {
-        Directions {
-            iter: self,
-            from: None,
-        }
+        Directions::new(self)
     }
 }
 impl<T: ?Sized> IteratorExt for T where T: Iterator {}
@@ -64,7 +71,7 @@ mod tests {
 
     #[test]
     fn it_should_be_able_to_handle_a_single_entry() {
-        let mut iter = utils::lines(Cursor::new("123")).directions();
+        let mut iter = utils::lines(Cursor::new("123")).directions::<1>();
         assert_eq!(
             (
                 Some(Direction {
@@ -79,7 +86,7 @@ mod tests {
 
     #[test]
     fn it_should_be_able_to_handle_multiple_entries() {
-        let mut iter = utils::lines(Cursor::new("123\n456")).directions();
+        let mut iter = utils::lines(Cursor::new("123\n456")).directions::<1>();
         assert_eq!(
             (
                 Some(Direction {
@@ -98,7 +105,7 @@ mod tests {
 
     #[test]
     fn it_should_be_able_to_handle_no_entries() {
-        let mut iter = utils::lines(Cursor::new("")).directions();
+        let mut iter = utils::lines(Cursor::new("")).directions::<1>();
         assert_eq!(None, iter.next());
     }
 
@@ -118,10 +125,35 @@ mod tests {
       263
 "
             ))
-            .directions()
+            .directions::<1>()
             .filter(Direction::increased)
             .count(),
             7
         )
+    }
+
+    #[test]
+    fn x() {
+        let mut iter = utils::lines(Cursor::new(
+            "199
+        200
+        208
+        210
+        200
+        207
+        240
+        269
+        260
+        263
+",
+        ))
+        .directions::<3>();
+        assert_eq!(
+            Some(Direction {
+                from: None,
+                to: 607
+            }),
+            iter.next()
+        );
     }
 }
