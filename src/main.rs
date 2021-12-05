@@ -1,3 +1,5 @@
+use std::path::Path;
+
 mod days;
 mod utils;
 
@@ -33,11 +35,32 @@ fn main() {
                 .validator(|v| Day::try_from(Some(v)).map(|_| ()))
                 .takes_value(true),
         )
+        .arg(
+            clap::Arg::with_name("input")
+                .short("f")
+                .long("file")
+                .value_name("INPUT")
+                .help("File to be used as input, or\"-\" for stdin")
+                .validator(|v| {
+                    if v == "-" || Path::new(&v).exists() {
+                        Ok(())
+                    } else {
+                        Err(String::from("File does not exist"))
+                    }
+                })
+                .takes_value(true),
+        )
         .get_matches();
+
+    let input = match matches.value_of("input") {
+        None => days::Input::Predefined,
+        Some("-") => days::Input::Stdin,
+        Some(p) => days::Input::File(p.into()),
+    };
 
     match Day::try_from(matches.value_of("day")) {
         Ok(Day::All) => days::run_all(),
-        Ok(Day::Specific(day)) => days::run(day),
+        Ok(Day::Specific(day)) => days::run(day, input),
         Err(_) => eprintln!("Invalid day"),
     }
 }
