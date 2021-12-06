@@ -9,7 +9,7 @@ use std::{
 mod day01;
 mod day02;
 
-const DAYS: [Day; 3] = [Day(1, 1), Day(1, 2), Day(2, 1)];
+const DAYS: [Day; 4] = [Day(1, 1), Day(1, 2), Day(2, 1), Day(2, 2)];
 
 pub enum Input {
     Predefined,
@@ -32,7 +32,8 @@ impl Day {
         match self {
             Day(1, 1) => day01::part1::run(read),
             Day(1, 2) => day01::part2::run(read),
-            Day(2, 1) => day02::run(read),
+            Day(2, 1) => day02::part1::run(read),
+            Day(2, 2) => day02::part2::run(read),
             _ => panic!(),
         }
     }
