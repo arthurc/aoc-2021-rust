@@ -1,15 +1,5 @@
-use crate::utils;
-use std::io::BufRead;
-
-pub fn run(read: impl BufRead) -> String {
-    format!(
-        "{}",
-        utils::lines(read)
-            .directions::<1>()
-            .filter(Direction::increased)
-            .count()
-    )
-}
+pub mod part1;
+pub mod part2;
 
 #[derive(PartialEq, Debug)]
 struct Direction {
@@ -32,11 +22,16 @@ struct Directions<I, const W: usize> {
     window: [i32; W],
 }
 impl<I: Iterator<Item = i32>, const W: usize> Directions<I, W> {
-    fn new(iter: I) -> Self {
+    fn new(mut iter: I) -> Self {
+        let mut window = [0; W];
+        for i in 0..W - 1 {
+            window[i] = iter.next().unwrap_or_default();
+        }
+
         Self {
             iter,
             from: None,
-            window: [0; W],
+            window,
         }
     }
 }
@@ -47,8 +42,12 @@ where
     type Item = Direction;
 
     fn next(&mut self) -> Option<Self::Item> {
-        let to = self.iter.next()?;
+        self.window[W - 1] = self.iter.next()?;
+
+        let to = self.window.iter().fold(0, |acc, x| acc + x);
         let from = self.from.replace(to);
+
+        self.window.rotate_left(1);
 
         Some(Direction { from, to })
     }
@@ -67,6 +66,7 @@ impl<T: ?Sized> IteratorExt for T where T: Iterator {}
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils;
     use std::io::Cursor;
 
     #[test]
@@ -149,11 +149,17 @@ mod tests {
         ))
         .directions::<3>();
         assert_eq!(
-            Some(Direction {
-                from: None,
-                to: 607
-            }),
-            iter.next()
+            (
+                Some(Direction {
+                    from: None,
+                    to: 607
+                }),
+                Some(Direction {
+                    from: Some(607),
+                    to: 618
+                })
+            ),
+            (iter.next(), iter.next())
         );
     }
 }

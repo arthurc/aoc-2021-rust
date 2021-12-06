@@ -3,11 +3,12 @@ use std::{
     fs::File,
     io::{BufRead, BufReader},
     path::PathBuf,
+    str::FromStr,
 };
 
 mod day01;
 
-const DAYS: [Day; 1] = [Day(1)];
+const DAYS: [Day; 2] = [Day(1, 1), Day(1, 2)];
 
 pub enum Input {
     Predefined,
@@ -15,19 +16,21 @@ pub enum Input {
     Stdin,
 }
 
-pub struct Day(i32);
+#[derive(Debug, PartialEq)]
+pub struct Day(i32, i32);
 impl Day {
-    pub fn new(n: i32) -> Option<Self> {
-        return if (1..=25).contains(&n) {
-            Some(Self(n))
+    pub fn new(n: i32, p: i32) -> Option<Self> {
+        return if (1..=25).contains(&n) && p > 0 {
+            Some(Self(n, p))
         } else {
             None
         };
     }
 
     pub fn run(&self, read: &mut impl BufRead) -> String {
-        match self.0 {
-            1 => day01::run(read),
+        match self {
+            Day(1, 1) => day01::part1::run(read),
+            Day(1, 2) => day01::part2::run(read),
             _ => panic!(),
         }
     }
@@ -38,7 +41,22 @@ impl Day {
 }
 impl Display for Day {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
+        match self {
+            Day(d, 1) => write!(f, "{}", d),
+            Day(d, p) => write!(f, "{} part {}", d, p),
+        }
+    }
+}
+
+impl FromStr for Day {
+    type Err = String;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.split("/").map(|s| s.parse::<i32>()).collect::<Vec<_>>()[..] {
+            [Ok(d), Ok(p)] => Day::new(d, p).ok_or_else(|| String::from("Invalid day")),
+            [Ok(d)] => Ok(Day(d, 1)),
+            _ => Err(String::from("Invalid day format")),
+        }
     }
 }
 
@@ -63,17 +81,31 @@ pub fn run_all() {
 mod tests {
     use super::*;
 
+    mod from_str {
+        use super::*;
+
+        #[test]
+        fn it_should_parse_single_day() {
+            assert_eq!(Ok(Day(1, 1)), "1".parse::<Day>())
+        }
+
+        #[test]
+        fn it_should_parse_day_and_part() {
+            assert_eq!(Ok(Day(1, 2)), "1/2".parse::<Day>())
+        }
+    }
+
     mod day_input_file {
         use super::*;
 
         #[test]
         fn it_should_return_the_file_path() {
-            assert_eq!(PathBuf::from("input/day01.txt"), Day(1).input_file())
+            assert_eq!(PathBuf::from("input/day01.txt"), Day(1, 1).input_file())
         }
 
         #[test]
         fn it_should_be_able_to_handle_two_digit_day() {
-            assert_eq!(PathBuf::from("input/day12.txt"), Day(12).input_file())
+            assert_eq!(PathBuf::from("input/day12.txt"), Day(12, 1).input_file())
         }
     }
 }

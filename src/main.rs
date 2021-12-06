@@ -12,11 +12,10 @@ impl<T: AsRef<str>> TryFrom<Option<T>> for Day {
     type Error = String;
 
     fn try_from(s: Option<T>) -> Result<Self, Self::Error> {
-        match s.map(|s| s.as_ref().parse::<i32>().map(days::Day::new)) {
+        match s.map(|s| s.as_ref().parse::<days::Day>()) {
             None => Ok(Day::All),
-            Some(Ok(Some(n))) => Ok(Day::Specific(n)),
-            Some(Ok(None)) => Err(String::from("Day must be between 1 and 25")),
-            _ => Err(String::from("Invalid day")),
+            Some(Ok(n)) => Ok(Day::Specific(n)),
+            Some(Err(e)) => Err(e),
         }
     }
 }
