@@ -8,8 +8,9 @@ use std::{
 
 mod day01;
 mod day02;
+mod day03;
 
-const DAYS: [Day; 4] = [Day(1, 1), Day(1, 2), Day(2, 1), Day(2, 2)];
+const DAYS: [Day; 5] = [Day(1, 1), Day(1, 2), Day(2, 1), Day(2, 2), Day(3, 1)];
 
 pub enum Input {
     Predefined,
@@ -34,6 +35,7 @@ impl Day {
             Day(1, 2) => day01::part2::run(read),
             Day(2, 1) => day02::part1::run(read),
             Day(2, 2) => day02::part2::run(read),
+            Day(3, 1) => day03::part1::run(read),
             _ => panic!(),
         }
     }
